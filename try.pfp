@@ -1,0 +1,21 @@
+Unit:
+  Name=Fahrenheit
+  Sign=°F
+  Main=Celsius
+  Formula=($main*1.8)+32
+  Desc=The degree Fahrenheit is a unit of temperature. In the Fahrenheit temperature scale, the freezing point of water is 32 degerees Fahrenheit (°F) and the boiling point 212 °F.
+
+Unit:
+  Name=Metercube
+  Sign=mcb
+  Main=Metercube
+  Formula=$main^3
+  Desc=Metercube or cubic meter is the SI unit of volume. It is equal to one liter or a cube with edges of 1 meter each.
+
+Unit:
+  Name=Second
+  Sign=sec
+  Main=Second
+  Formula=$main
+  Desc=The second is the International System of Units (SI) base unit of time.
+

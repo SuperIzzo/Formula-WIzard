@@ -1,0 +1,41 @@
+Formula:
+Name=Ohm's Law
+Formula=I=V/R
+Case=always
+Description=Ohm's law applies to electrical circuits and states that the current through a conductor between two points is directly proportional to the potential difference (i.e. voltage drop or voltage) across the two points, and inversely proportional to the resistance between them.
+
+Unit:
+Name=Ampere
+Sign=A
+Main=Ampere
+Formula=$main
+Description=The ampere, in practice often shortened to amp, (symbol: A) is a unit of electric current, or amount of electric charge per unit time, in coulombs per second.
+
+Unit:
+Name=Volt
+Sign=V
+Main=Volt
+Formula=$main
+Description=The volt is the SI derived unit of electric potential difference or electromotive force, commonly known as voltage.
+
+Unit:
+Name=Ohm
+Sign=O
+Main=Ohm
+Formula=$main
+Description=The ohm (symbol: ?) is the SI unit of electrical impedance or, in the direct current case, electrical resistance, named after Georg Ohm.
+
+Quantity:
+Name=Electric Current
+Sign=I
+Unit=Ampere
+
+Quantity:
+Name=Potential Difference in Volts
+Sign=V
+Unit=Volt
+
+Quantity:
+Name=Electric Resistance
+Sign=R
+Unit=Ohm

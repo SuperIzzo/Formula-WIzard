@@ -1,0 +1,174 @@
+Formula:
+  Name=Force
+  Formula=F=m*a
+  Case=
+  Desc=
+
+Formula:
+  Name=Distance
+  Formula=S=V*t
+  Case=
+  Desc=
+
+Formula:
+  Name=Acelaration
+  Formula=a=(V$f-V$i)/t
+  Case=
+  Desc=
+
+Formula:
+  Name=Gravity Force
+  Formula=G=m*9.8
+  Case=
+  Desc=
+
+Formula:
+  Name=Friction Surface
+  Formula=N=-G
+  Case=
+  Desc=
+
+Formula:
+  Name=Friction Force
+  Formula=fr=k*N
+  Case=
+  Desc=
+
+Formula:
+  Name=Friction Force while Rolling
+  Formula=fr=(k*N)/R
+  Case=
+  Desc=
+
+Formula:
+  Name=Quadratic Equation
+  Formula=y=a*(x^2)+b*x+c
+  Case=
+  Desc=
+
+Formula:
+  Name=Biquadratic Equation
+  Formula=y=a*(x^4)+b*(x^2)+c
+  Case=
+  Desc=
+
+Quantity:
+  Name=Distance
+  Sign=S
+  Unit=Meter
+  Desc=distance
+
+Quantity:
+  Name=Velocity
+  Sign=V
+  Unit=Meter/Second
+  Desc=
+
+Quantity:
+  Name=Something
+  Sign=sm
+  Unit=Inch*Second/Kelvin
+  Desc=
+
+Quantity:
+  Name=Temperature
+  Sign=°t
+  Unit=Kelvin
+  Desc=
+
+Quantity:
+  Name=Acceleration
+  Sign=a
+  Unit=Meter/(Second^2)
+  Desc=
+
+Quantity:
+  Name=Time
+  Sign=t
+  Unit=Second
+  Desc=
+
+Unit:
+  Name=Inch
+  Sign=in
+  Main=Meter
+  Formula=$main/0.0254
+  Desc=
+
+Unit:
+  Name=Yard
+  Sign=yd
+  Main=Meter
+  Formula=$main/0.9144
+  Desc=
+
+Unit:
+  Name=Foot
+  Sign=ft
+  Main=Meter
+  Formula=$main/0.3048
+  Desc=
+
+Unit:
+  Name=Kelvin
+  Sign=°K
+  Main=Celsius
+  Formula=$main+273.15
+  Desc=The degree Kelvin is a unit of temperature. In the Kelvin temperature scale, 0 °K is the absolute zero or the point when particles stop moving.
+
+Unit:
+  Name=Celsius
+  Sign=°C
+  Main=Celsius
+  Formula=$main
+  Desc=The degree Celsius is a unit of temperature. In the Celsius temperature scale, the freezing point of water is 0 degerees Celsius (°C) and the boiling point 100 °C.
+
+Unit:
+  Name=Fahrenheit
+  Sign=°F
+  Main=Celsius
+  Formula=($main*1.8)+32
+  Desc=The degree Fahrenheit is a unit of temperature. In the Fahrenheit temperature scale, the freezing point of water is 32 degerees Fahrenheit (°F) and the boiling point 212 °F.
+
+Unit:
+  Name=Meter
+  Sign=m
+  Main=Meter
+  Formula=$main
+  Desc=The meter is the basic unit of lenght in the metric system and in International System of Units (SI).
+
+Unit:
+  Name=Metercube
+  Sign=mcb
+  Main=Metercube
+  Formula=$main^3
+  Desc=Metercube or cubic meter is the SI unit of volume. It is equal to one liter or a cube with edges of 1 meter each.
+
+Unit:
+  Name=Second
+  Sign=sec
+  Main=Second
+  Formula=$main
+  Desc=The second is the International System of Units (SI) base unit of time.
+
+Unit:
+  Name=Minute
+  Sign=min
+  Main=Second
+  Formula=$main/60
+  Desc=A minute is a unit for mesurement of time. It is equal to 60 seconds and 1/60 of the hour. The minute is not a SI unit.
+
+Unit:
+  Name=Gram
+  Sign=g
+  Main=Gram
+  Formula=$main
+  Desc=Gram is a unit of mass, originally defined as the absolute weight of a volume of pure water equal to the cube of the centimeter and the temperature of the melting ice (later 4°C).
+
+Unit:
+  Name=Newton
+  Sign=N
+  Main=Newton
+  Formula=$main
+  Desc=1 Newton is equal to the amount of force required to give a mass of one kilogram an acceleration of one metre per second squared.
+

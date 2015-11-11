@@ -1,0 +1,132 @@
+unit FormulaInsUnit;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+  StdCtrls, DBCtrls, ExtCtrls, Db, DBTables, ADODB,ShellApi;
+
+type
+  TFormulaInsBox = class(TForm)
+    DBLookupListBox1: TDBLookupListBox;
+    Discription: TDBMemo;
+    Bevel1: TBevel;
+    Btn_Add: TButton;
+    Btn_Edit: TButton;
+    Btn_Del: TButton;
+    Btn_More: TButton;
+    Btn_Calc: TButton;
+    Btn_Close: TButton;
+    Formula: TDBText;
+    DataSource1: TDataSource;
+    DataSource2: TDataSource;
+    ADOTable1: TADOTable;
+    ADOTable2: TADOTable;
+    Btn_Graph: TButton;
+    procedure Btn_EditClick(Sender: TObject);
+    procedure Btn_AddClick(Sender: TObject);
+    procedure Btn_DelClick(Sender: TObject);
+    procedure Btn_CloseClick(Sender: TObject);
+    procedure Btn_CalcClick(Sender: TObject);
+    procedure Btn_MoreClick(Sender: TObject);
+    procedure delete(Sender: TObject; var Key: Char);
+    procedure Btn_GraphClick(Sender: TObject);
+    function  get_formula(name:string):string;
+    procedure ADOTable1datachange(DataSet: TDataSet);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  FormulaInsBox: TFormulaInsBox;
+  mode:0..2;
+
+implementation
+
+uses Unit2, Unit8, Unit6, Unit19, DesktopUnit;
+
+{$R *.DFM}
+
+
+function TFormulaInsBox.get_formula;
+  var book:string;
+  begin
+    book:=ADOTable1.Bookmark;
+    ADOTable1.first;
+    get_formula:='';
+    while not ADOTable1.Eof do
+    begin
+      if UpperCase(name)=UpperCase(string(ADOTable1.FieldValues['Name'])) then
+      begin
+        get_formula:=string(ADOTable1.FieldValues['Formula']);
+        ADOTable1.Bookmark:=book;
+        exit;
+      end;
+      ADOTable1.Next;
+    end;
+    ADOTable1.Bookmark:=book;
+  end;
+
+
+procedure TFormulaInsBox.Btn_EditClick(Sender: TObject);
+begin
+  Mode:=2;
+  form2.caption:='Edit a Formula';
+  Form2.Visible:=true;
+end;
+
+procedure TFormulaInsBox.Btn_AddClick(Sender: TObject);
+begin
+  Mode:=1;
+  form2.caption:='Add a Formula';
+  Form2.Visible:=true;
+end;
+
+procedure TFormulaInsBox.Btn_DelClick(Sender: TObject);
+begin
+  if MessageDlg('Are you sure you want to delete this formula?',
+     MtConfirmation,[MbYes,MbNo],0)=mrYes then ADOTable1.Delete;
+end;
+
+procedure TFormulaInsBox.Btn_CloseClick(Sender: TObject);
+begin
+  self.hide;
+end;
+
+procedure TFormulaInsBox.Btn_CalcClick(Sender: TObject);
+begin
+  form8.mode:=1;
+  form8.show;
+end;
+
+procedure TFormulaInsBox.Btn_MoreClick(Sender: TObject);
+begin
+  if form6.Visible then form6.fill_mee(ADOTable1.FieldValues['Name'])
+  else
+  begin
+    form6.mode:=1;
+    form6.visible:=true;
+  end;
+end;
+
+procedure TFormulaInsBox.delete(Sender: TObject; var Key: Char);
+begin
+   if ord(Key)=127 then Btn_DelClick(self);
+end;
+
+procedure TFormulaInsBox.Btn_GraphClick(Sender: TObject);
+begin
+  Form19.mode:=1;
+  Form19.show;
+end;
+
+procedure TFormulaInsBox.ADOTable1DataChange(DataSet: TDataSet);
+begin
+  Desktop.SetChange('',true);
+end;
+
+end.
+
+

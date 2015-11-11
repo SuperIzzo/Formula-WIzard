@@ -1,0 +1,34 @@
+unit SplashUnit;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, ExtCtrls;
+
+type
+  TSplashScreen = class(TForm)
+    Image1: TImage;
+    procedure FormMouseMove(Sender: TObject; Shift: TShiftState; X,
+      Y: Integer);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  SplashScreen: TSplashScreen;
+
+implementation
+
+{$R *.dfm}
+
+procedure TSplashScreen.FormMouseMove(Sender: TObject; Shift: TShiftState;
+  X, Y: Integer);
+begin
+  self.Hide;
+  self.Free;
+end;
+
+end.

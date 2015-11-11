@@ -1,0 +1,777 @@
+unit ECalc;
+
+interface
+uses math,SysUtils,EExpr,StrUtils,FormulasUnit;
+
+const
+  MaxVars=30;
+  rplc=true;
+
+Type
+  TFunctionSet = (fabs,fsqrt,fsqr,fsin,fcos,ftan,farcsin,farccos,
+                  farctan,fln,flog,fexp,fround,ftrunc,ffrac,ffact,fsgn,fPi,fE,fForm);
+  TFunctionList = array[TFunctionSet] of string[16];
+
+  TVariable=record
+              name  :string[20];
+              value :real;
+            end;
+
+  TVariables=array[1..MAXVARS] of TVariable;
+
+  TError=record
+           Position :Integer;
+           Message  :String ;
+           Code     :Byte   ;
+         end;
+
+
+Const
+  FunctionList: TFunctionList =('ABS','SQRT','SQR','SIN','COS','TAN','ARCSIN','ARCCOS',
+                                'ARCTAN','LN','LOG','EXP','ROUND','TRUNC','FRAC','FACT','SGN','PI','E','FORMULA');
+
+  novars: TVariables = ((),(),(),(),(),
+                        (),(),(),(),(),
+                        (),(),(),(),(),
+                        (),(),(),(),(),
+                        (),(),(),(),(),
+                        (),(),(),(),());
+
+  {('',0),('',0),('',0),('',0),('',0),
+                        ('',0),('',0),('',0),('',0),('',0),
+                        ('',0),('',0),('',0),('',0),('',0),
+                        ('',0),('',0),('',0),('',0),('',0))}
+
+
+procedure FindVars(Formula:string;
+                   Var Vars:TVariables;
+                   var j:word);
+
+function VarIndex(Vars:TVariables;vname:string):word;
+
+function Calculate(Formula       : String;
+                   vars          : TVariables;
+                   var Error     : TError) :Extended;
+
+//procedure ReplaceFormulas(var formula:string);
+
+var a0:extended;
+
+implementation
+
+  Function SkipTill(what,Expr:string;cpos:word):word;
+  var obra,cbra,ik:word;
+  begin
+    SkipTill:=length(Expr)+1;
+    obra:=0;
+    cbra:=0;
+
+    for Ik:=cpos to length(Expr) do
+    begin
+      if (Expr[ik]=what) and (obra=cbra) then
+      begin
+        SkipTill:=ik;
+        exit;
+      end;
+
+      if Expr[ik]='(' then obra:=obra+1;
+
+      if Expr[ik]=')' then
+      if obra<=cbra then
+      begin
+        SkipTill:=ik;
+        Exit;
+      end else cbra:=cbra+1;
+    end;
+  end;
+
+procedure FindVars(Formula:string;
+                   Var Vars:TVariables;
+                   Var j:word);
+
+var i,en,ep,jt:word;
+    exprs:string;
+    TVars:TVariables;
+
+
+procedure SkipChars;
+begin
+  while ( not (UpCase(formula[i]) in ['A'..'Z'])or(formula[i] in ['0'..'9'])or(formula[i]='$'))and(i<=length(formula)) do inc(i);
+end;
+
+procedure ReadChars;
+var loop:TFunctionSet;
+    loop2,k,l,h:integer;
+begin
+  while ((UpCase(formula[i]) in ['A'..'Z'])or(formula[i] in ['0'..'9'])or(formula[i]='$'))and(i<=length(formula)) do
+    begin
+      Vars[j].Name:=Vars[j].Name+formula[i];
+      inc(i);
+    end;
+//  if (UpperCase(vars[j].Name)='FORMULA') then i:=SkipTill('&$%',formula,PosEx('(',formula,i)+1);
+
+  if formula[i]='(' then
+  begin
+    //Work on this.... you need to consider values given as leters as variables too.
+    i:=PosEx('(',formula,i);
+    en:=SkipTill('&$%',formula,i+1);
+    while (pos('"',copy(formula,i,en-i))>0) do i:=SkipTill('"',formula,i);
+//    if pos(',',copy(formula,i,en-i))>0 then i:=SkipTill(',',formula,i);
+    en:=i;
+
+    for k:=1 to maxvars do
+      begin
+        i:=en;
+        if formula[i]=')' then break;
+        en:=SkipTill(',',formula,i+1);
+        exprs:=copy(Formula,i+1,en-i-1);
+        for h:=1 to length(exprs) do
+          if exprs[h]=' ' then  delete(exprs,h,1);
+
+        if (exprs='') then continue;
+        begin
+
+        ep:=pos('=',exprs);
+        FindVars(copy(exprs,ep+1,length(exprs)),TVars,jt);
+        for l:=1 to jt do
+          begin
+            Vars[j].name:=TVars[l].name;
+            
+            for loop2:=1 to j-1 do
+            if Vars[j].Name=Vars[loop2].name then
+            begin
+              vars[j].name:='';
+              dec(j);
+            end;
+
+            for loop:=fabs to fForm do
+            if Uppercase(Vars[j].Name)=Uppercase(functionList[loop]) then
+            begin
+              vars[j].name:='';
+              dec(j);
+            end;
+
+            if Vars[j].Name[1] in ['0'..'9'] then
+            begin
+              vars[j].name:='';
+              dec(j);
+            end;
+
+            inc(j);
+          end;
+        end;
+      end;
+      dec(j);
+  end;
+
+  for loop:=fabs to fForm do
+    if Uppercase(Vars[j].Name)=Uppercase(functionList[loop]) then
+      begin
+        vars[j].name:='';
+
+        exit;
+      end;
+
+  if Vars[j].Name[1] in ['0'..'9'] then
+      begin
+        vars[j].name:='';
+        exit;
+      end;
+
+  for loop2:=1 to j-1 do
+    if Vars[j].Name=Vars[loop2].name then
+      begin
+        vars[j].name:='';
+        Exit;
+      end;
+
+
+
+inc(J);
+end;
+
+begin
+  for i:=1 to MaxVars do
+    begin
+      Vars[i].Name:='';
+      Vars[i].Value:=0;
+    end;
+  for i:=1 to length(formula) do
+    Formula[i]:=Formula[i];
+  formula:=formula+' ';
+  i:=1;
+  j:=1;
+  repeat
+    ReadChars;
+    SkipChars;
+  until i>=length(formula);
+  j:=j-1;
+end;
+
+
+function VarIndex;
+var i:word;
+begin
+VarIndex:=0;
+for i:=1 to MAXVARS do
+  if vname= Vars[i].name then
+  begin
+    VarIndex:=i; break;
+  end;
+end;
+
+function Calculate(Formula: String;             { Formula to Calculate }
+                   vars          : TVariables;      { Variables in the formula }
+                   var Error: TError) :Extended;    { Information about errors }
+
+{ Any undefined variable or function in the formula are considered as mistake }
+
+const
+  NumSet: set of Char = ['0'..'9']; { Set of number characters (to check if Ch is a Number)  }
+  EndofLine  = ^M;                  { A symbol marking the end of the line                   }
+
+var
+  CurPos, i           : Integer;    { The position of the current character           }
+  Ch               : Char;       { Current character                               }
+  TempStr          : String;     { Temporary used string                           }
+  RightBrackets,
+  LeftBrackets     : Integer;    { Brackets counters                               }
+  Expi             : Extended;
+
+
+  { Moves Ch to the next character in the formula }
+  { and increases the value of CurPos by one         }
+
+  procedure ReplaceFormulas(var formula:string);
+  var i,st,en:integer;
+    name,forml:string;
+  begin
+    for i:=1 to length(formula) do
+    begin
+      if ((Formula[i] in CharSet)or(i=1))and(en<>-1) then
+        begin if i=1 then st:=0 else st:=i;en:=-1;end;
+
+      if (Formula[i]='(') and (st<>-1) then
+      begin
+        en:=i;
+        if st=i then continue;
+        name:=copy(formula,st+1,en-st-1);
+        forml:=Formulas.get_formula(name);
+
+        if forml='' then exit;
+        {begin
+          Error.Position:=CurPos;
+          Error.Message:='Formula not found "'+name+'".';
+          Error.Code:=11;
+          exit;
+        end;}
+
+        Formula:=StringReplace(Formula,name+'(','formula("'+forml+'",',[rfReplaceAll, rfIgnoreCase]);
+        st:=-1;
+      end;
+    end;
+  end;
+
+  Procedure NextChar;
+  begin
+    repeat
+      CurPos:=CurPos+1;
+      if CurPos<=Length(Formula) then
+      Ch:=Formula[CurPos] else Ch:=EndofLine;
+    until Ch<>' ';
+  end  { NextChar };
+
+
+
+  function Fact(I: Integer): Extended;  { Facturiel (Hope it's this way in English) }
+  var  Temp   : Extended;
+  begin
+    if i=1 then
+      begin
+        Fact:=1;
+        Exit;
+      end;
+    Temp:=1;
+    for i:=1 to i do Temp:=Temp*i;
+    Fact:=Temp;
+  end  { Fact };
+
+
+  { Returns the sign of a number }
+
+  Function Sgn(Num:real):real;
+  begin
+    if Num>0 then Sgn:=1
+      else if Num<0 then Sgn:=-1
+             else Sgn:=0;
+  end  { Sgn };
+
+  function ExpLv5: Extended;
+  var
+    Value      : Extended;
+    Operation  : Char;
+
+    function ExpLv4: Extended;
+    var
+      Value,xp3  : Extended;
+      Operation  : Char;
+
+
+      function ExpLv3: Extended;
+      var
+        Value      : Extended;
+
+        function ExpLv2: Extended;
+
+          function ExpLv1: Extended;
+          type
+            TFunctionSet = (fabs,fsqrt,fsqr,fsin,fcos,ftan,farcsin,farccos,
+            farctan,fln,flog,fexp,fround,ftrunc,ffrac,ffact,fsgn,fPi, fE,fForm);
+            TFunctionList = array[TFunctionSet] of string[16];
+
+          const
+            FunctionList: TFunctionList =('ABS','SQRT','SQR','SIN','COS','TAN','ARCSIN','ARCCOS',
+                                          'ARCTAN','LN','LOG','EXP','ROUND','TRUNC','FRAC','FACT','SGN','PI','E','FORMULA');
+          var
+            L              : Integer;       { intermidiate variables }
+            FunctionFound,
+            VariableFound,
+            FormulaFound   : Boolean;
+            Value          : Extended;
+            FunctionSet    : TFunctionSet;
+            Start,i,j,
+            posi,posf,
+            pose,tpos      : Integer;
+            tvnum,vi,af    : Word;
+            TempVars       : TVariables;
+            tempstr,
+            tvstring,
+            vval,vname,
+            exprs          : String;
+            cht            : Char;
+            Occupied       : Array[1..MAXVARS] of Boolean;
+
+
+          begin { Function ExpLv1 }
+            if Ch in numset then
+              begin
+                Start:=CurPos;
+
+                repeat NextChar
+                until not (Ch in numset);
+
+                if Ch='.' then
+                  repeat NextChar
+                  until not (Ch in numset);
+
+                if Ch='E' then
+                  begin
+                    NextChar;
+                    repeat NextChar
+                    until not (Ch in numset);
+                  end;
+
+                Val(Copy(Formula,Start,CurPos-Start),Value,Error.Position);
+                if Error.Position<>0 then
+                begin
+                  Error.Position:=CurPos;
+                  Error.Message:='Illegal value "'+Copy(Formula,Start,CurPos-Start)+'".';
+                  Error.Code:=6;
+                  exit;
+                end;
+              end
+            else
+              if Ch='(' then
+                begin
+                  NextChar;
+                  Value:=ExpLv5;
+                  if Ch=')' then
+                    NextChar
+                  else
+                    begin
+                      Error.Position:=CurPos;
+                      Error.Message:='")" expected, but not found.';
+                      Error.Code:=1;
+                      exit;
+                    end;
+                end
+              else
+                begin
+                  VariableFound:=false;
+                  for i:=1 to MaxVars do
+                    if (not VariableFound)and(Vars[i].Name<>'') then
+                      begin
+                        l:=Length(Vars[i].name);
+                        if copy(Formula,CurPos,l)=Vars[i].name then
+                          begin
+                            CurPos:=CurPos+l-1; NextChar;
+                            Value:=Vars[i].Value;
+                            VariableFound:=true;
+                          end;
+                      end;
+
+                    FunctionFound:=false;
+                    for FunctionSet:=fabs to fForm do
+                      if not (FunctionFound or VariableFound) then
+                        begin
+                          l:=Length(FunctionList[FunctionSet]);
+                          if Uppercase(copy(Formula,CurPos,l))=Uppercase(FunctionList[FunctionSet]) then
+                          begin
+                            CurPos:=CurPos+l-1; NextChar;
+
+                            case FunctionSet of
+                              fabs:     begin Value:=ExpLv1; Value:=abs(Value);end;
+                              fsqrt:    begin Value:=ExpLv1; Value:=sqrt(Value);end;
+                              fsqr:     begin Value:=ExpLv1; Value:=sqr(Value);end;
+                              fsin:     begin Value:=ExpLv1; Value:=sin(Value);end;
+                              fcos:     begin Value:=ExpLv1; Value:=cos(Value);end;
+                              ftan:     begin Value:=ExpLv1; Value:=sin(Value)/cos(Value);end;
+                              farcsin:  begin Value:=ExpLv1; Value:=arctan(Value/sqrt(1-sqr(Value)));end;
+                              farccos:  begin Value:=ExpLv1; Value:=arctan(sqrt(1-sqr(Value))/Value);end;
+                              farctan:  begin Value:=ExpLv1; Value:=arctan(Value);end;
+                              fln :     begin Value:=ExpLv1; Value:=ln(Value);end;
+                              flog:     begin Value:=ExpLv1; Value:=ln(Value)/ln(10);end;
+                              fexp:     begin Value:=ExpLv1; Value:=exp(Value);end;
+                              fround:   begin Value:=ExpLv1; Value:=round(Value);end;
+                              ftrunc:   begin Value:=ExpLv1; Value:=trunc(Value);end;
+                              ffrac:    begin Value:=ExpLv1; Value:=frac(Value);end;
+                              ffact:    begin Value:=ExpLv1; Value:=Fact(trunc(Value));end;
+                              fsgn:     begin Value:=ExpLv1; Value:=sgn(Value);end;
+                              fPi:      begin Value:=Pi;end;
+                              fE:       begin Value:=Exp(1);end;
+                              fForm:    begin
+                                          cht:=' ';
+                                          posi:=CurPos-1;
+                                          while ((cht<>'"') or (posi<length(Formula))) do
+                                          begin
+                                            posi:=posi+1;
+                                            cht:=Formula[posi];
+                                            if ((cht<>' ') and (cht<>'"') and (cht<>'(')) then
+                                            begin
+                                              Error.Position:=CurPos;
+                                              Error.Message:='Formula expected, but not found.';
+                                              Error.Code:=7;
+                                              exit;
+                                            end;
+
+                                            if cht='"' then break;
+                                          end;
+
+                                          if cht<>'"' then
+                                          begin
+                                            Error.Position:=CurPos;
+                                            Error.Message:='Formula expected, but not found.';
+                                            Error.Code:=7;
+                                            exit;
+                                          end;
+
+                                          posf:=posi;
+                                          cht:=' ';
+                                          while ((cht<>'"') and (posf<length(Formula))) do
+                                          begin
+                                            posf:=posf+1;
+                                            cht:=Formula[posf];
+                                          end;
+
+                                          if cht<>'"' then                                          if cht<>'"' then
+                                          begin
+                                            Error.Position:=CurPos;
+                                            Error.Message:='Formula declaration not closed.';
+                                            Error.Code:=8;
+                                            exit;
+                                          end;
+
+                                          tempstr:=copy(Formula,posi+1,posf-posi-1);
+                                          FindVars(TempStr,TempVars,tvnum);
+                                          af:=0;
+                                          tvstring:='';
+                                          
+//                                          posf:=posi+1;
+                                          posf:=posf+1;
+                                          tpos:=posf;
+
+                                          for i:=1 to maxvars do
+                                          begin
+                                            posi:=posf;
+                                            while Formula[posi]=' ' do posi:=posi+1;
+
+                                            posf:=SkipTill(',',formula,posi+1);//PosEx(',',formula,posi);
+
+                                            exprs:=copy(Formula,posi+1,posf-posi-1);
+                                            if exprs='' then continue;
+                                            pose:=Pos('=',exprs);
+
+                                            vname:=copy(exprs,1,pose-1);
+                                            vval:=copy(exprs,pose+1,length(exprs));
+
+                                            if ('?'=vval) then tvstring:=vname else
+                                            begin
+                                              vi:=VarIndex(TempVars,vname);
+                                              if vi=0 then continue;
+                                              TempVars[vi].value:=Calculate(vval,vars,Error);
+                                              Occupied[vi]:=true;
+
+                                              if Error.Code<>0 then
+                                              begin
+                                                Error.Message:='Value('+vname+'): '+ Error.Message;
+                                                Error.Position:=Error.Position+posi;
+                                                exit;
+                                              end;
+
+                                              af:=af+1;
+                                            end;
+                                            if Formula[posf]=')' then break;
+                                            //if (af>=tvnum-1) and (tvstring<>'') then break;
+                                          end;
+
+                                          posf:=tpos;
+
+                                          for i:=1 to maxvars do
+                                          begin
+                                            posi:=posf;
+                                            while Formula[posi]=' ' do posi:=posi+1;
+
+                                            posf:=SkipTill(',',formula,posi+1);//PosEx(',',formula,posi);
+
+                                            exprs:=copy(Formula,posi+1,posf-posi-1);
+                                            if exprs='' then continue;
+                                            pose:=Pos('=',exprs);
+
+                                            if pose<>0 then continue;
+                                            for vi:=1 to maxvars do
+                                              if (TempVars[vi].name<>'') and (TempVars[vi].name<>tvstring) and (Occupied[vi]=false) then break;
+
+                                            vval:=copy(exprs,1,length(exprs));
+
+                                            if tvstring='' then
+                                            begin
+                                              tvstring:=TempVars[vi].name;
+                                              posf:=posi;
+                                            end
+                                              else
+                                            begin
+                                              //vi:=VarIndex(TempVars,vname);
+//                                              if vi=0 then continue;
+                                              TempVars[vi].value:=Calculate(vval,vars,Error);
+                                              Occupied[vi]:=true;
+
+                                              if Error.Code<>0 then
+                                              begin
+                                                Error.Message:='Value('+vname+'): '+ Error.Message;
+                                                Error.Position:=Error.Position+posi;
+                                                exit;
+                                              end;
+
+                                              af:=af+1;
+                                            end;
+                                            if Formula[posf]=')' then break;
+                                            //if (af>=tvnum-1) and (tvstring<>'') then break;
+                                          end;
+
+                                          if tvstring='' then
+                                          begin
+                                            Error.Position:=CurPos;
+                                            Error.Message:='No unknow declared.';
+                                            Error.Code:=10;
+                                            exit;
+                                          end;
+
+                                          if af<tvnum-1 then
+                                          begin
+                                            Error.Position:=CurPos;
+                                            Error.Message:='Not enough actual parameters for a formula.';
+                                            Error.Code:=9;
+                                            exit;
+                                          end;
+
+                                          exprs:=tempstr;
+                                          Express(tvstring,exprs,history);
+                                          delete(exprs,1,pos('=',exprs));
+                                          Value:=Calculate(exprs,TempVars,Error);
+                                          curpos:=posf;nextchar;
+
+                                        end; //fForm
+
+                            end;
+                          FunctionFound:=true;
+                          continue;
+                          end;
+                        end;
+
+                    //FormulaFound:=false;
+                    //while not false begin end;
+
+                    if not( FunctionFound or VariableFound) then
+                      begin
+                        Error.Position:=CurPos;
+                        Error.Message:='Unnown variable or function.';
+                        Error.Code:=2;
+                      end;
+                end;
+                ExpLv1:=Value;
+          end { function ExpLv1};
+
+        begin { ExpLv2 }
+         if Ch='-' then
+           begin
+             NextChar; ExpLv2:=-ExpLv1;
+           end
+         else ExpLv2:=ExpLv1;
+        end { ExpLv2 };
+
+     begin { ExpLv3 }
+        Value:=ExpLv2;
+
+        while Ch in ['^','|','~'] do
+          begin
+            Operation:=Ch; NextChar;
+            expi:=ExpLv2;
+            if Operation='^' then
+              begin
+                if (value<>0) then Value:=sign( (1-(trunc(expi) mod 2))*2*(1-ceil(expi)+floor(expi)) +sign(value)) *exp(ln(abs(Value))*Expi)
+                else value:=0;
+              end
+
+              else
+            if Operation='|' then
+              begin
+                if value<>0 then Value:=sign( (1-(trunc(1/expi) mod 2))*2*(1-ceil(1/expi)+floor(1/expi)) +sign(value))*exp(ln(Value)*(1/Expi))
+                else Value:=0;
+              end
+              else
+            Value:=logn(Expi,value);
+          end;
+        ExpLv3:=Value;
+      end { ExpLv3 };
+
+    begin { ExpLv4 }
+      Value:=ExpLv3;
+      while Ch in ['*','/'] do
+        begin
+          Operation:=Ch;  NextChar;
+          xp3:=ExpLv3;
+          if (xp3=0)and(Operation='/') then
+          begin
+            
+            Error.Position:=CurPos;
+            Error.Message:='Devision by 0';
+            Error.Code:=12;
+            if (a0<>0) and (a0<>51423) then
+                xp3:=-a0;
+            else exit;    
+          end;
+          if Operation='*' then Value:=Value*xp3
+          else Value:=Value/xp3;
+        end;
+      ExpLv4:=Value;
+    end { ExpLv4 };
+
+  begin { ExpLv5 }
+    Value:=ExpLv4;
+    while Ch in ['+','-'] do
+      begin
+        Operation:=Ch; NextChar;
+        if Operation='+' then Value:=Value+ExpLv4
+        else Value:=Value-ExpLv4;
+      end;
+    ExpLv5:=Value;
+  end { ExpLv5 };
+
+
+begin { procedure Calculate }
+  { First to remove common mistakes }
+
+  Error.Code:=0;
+  Error.Message:='';
+  Error.Position:=0;
+
+  TempStr:='';     { remove all blanks }
+  for i:=1 to Length(Formula) do
+    if Formula[i]<>' ' then TempStr:=TempStr+Formula[i];
+
+  RightBrackets:=0;
+  LeftBrackets:=0;
+
+  for i:=1 to Length(TempStr) do
+    case TempStr[i] OF
+ //','           : TempStr[i]:='.'; { only dots allowed }
+      '[','{','('   : begin
+                        Inc(RightBrackets); { counts the number of Right Brackets       }
+                        TempStr[i]:='(';    { and makes sure there are only simple ones }
+                      end;
+      ']','}',')'   : begin
+                        Inc(LeftBrackets);  { the same that refers to the Right Brackets }
+                        TempStr[i]:=')';
+                      end;
+//      else TempStr[i]:=UpCase(TempStr[i]);  { Not case sensitive }
+    end;
+
+  i:=1;
+  repeat
+    Inc(i);
+    if (TempStr[i]='.') and not (TempStr[i-1] in numset) then
+      begin
+        Insert('0',TempStr,i);  Inc(i);
+      end;
+  until i>=Length(TempStr);
+
+  if TempStr[1]='.' then Insert('0',TempStr,1);
+
+  repeat
+  if TempStr[1] in ['+',')','*','/','^','|','~'] then delete(TempStr,1,1);
+  until not(TempStr[1] in ['+',')','*','/','^','|','~']);
+
+  if TempStr='' then
+    begin
+      Calculate:=0;
+      Error.Position:=-1;
+      Error.Message:='Empty formula entered.';
+      Error.Code:=3;
+      Exit;
+    end;
+
+  if RightBrackets<>LeftBrackets then
+    begin
+      Calculate:=0;
+      Error.Position:=-2;
+      Error.Message:='The number of the opening brackets does not match the number of the closing brackets.';
+      Error.Code:=4;
+      Exit;
+    end;
+
+  for i:=2 to Length(TempStr) do
+    if (TempStr[i]=')') and (TempStr[i-1]='(') then
+      begin
+        Calculate:=0;
+        Error.Position:=i;
+        Error.Message:='Expression in brackets missing.';
+        Error.Code:=5;
+        Exit;
+      end;
+
+  Formula:=TempStr;
+  if rplc then ReplaceFormulas(Formula);
+  CurPos:=0; NextChar;
+  Calculate:=ExpLv5;
+  if Ch=EndofLine then Error.Position:=0
+    else Error.Position:=CurPos;
+end { Calculate };
+begin
+a0:=0.001;
+
+end.
+
+{ Error Codes
+
+1: ")" expected, but not found.
+2: Unnown variable or function.
+3: Empty formula entered.
+4: The number of the opening brackets does not match the number of the closing brackets.
+5: Expression in brackets missing.
+6: Illegal value "<value>".
+7: Formula expected, but not found.
+8: Formula declaration not closed.
+9: Not enough actual parameters for a formula.
+10: No unknow declared.
+11: Formula not found "<name>".
+12: Devision by 0

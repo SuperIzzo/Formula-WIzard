@@ -1,0 +1,110 @@
+object QuantitiesTransBox: TQuantitiesTransBox
+  Left = 393
+  Top = 156
+  Width = 296
+  Height = 224
+  Caption = 'Translate (Quantities)'
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -11
+  Font.Name = 'MS Sans Serif'
+  Font.Style = []
+  FormStyle = fsStayOnTop
+  OldCreateOrder = False
+  OnShow = FormShow
+  PixelsPerInch = 96
+  TextHeight = 13
+  object Label1: TLabel
+    Left = 8
+    Top = 8
+    Width = 273
+    Height = 33
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'Quantity'
+    Font.Charset = ANSI_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -32
+    Font.Name = 'Microsoft Sans Serif'
+    Font.Style = [fsBold]
+    ParentFont = False
+  end
+  object ComboBox1: TComboBox
+    Left = 8
+    Top = 64
+    Width = 121
+    Height = 21
+    ItemHeight = 13
+    TabOrder = 0
+    OnChange = ComboBox1Change
+  end
+  object ComboBox2: TComboBox
+    Left = 160
+    Top = 64
+    Width = 121
+    Height = 21
+    ItemHeight = 13
+    TabOrder = 1
+    OnChange = ComboBox1Change
+  end
+  object Button1: TButton
+    Left = 8
+    Top = 160
+    Width = 97
+    Height = 25
+    Caption = 'Calculate'
+    TabOrder = 2
+    OnClick = Button1Click
+  end
+  object ComboBox3: TComboBox
+    Left = 72
+    Top = 16
+    Width = 145
+    Height = 21
+    ItemHeight = 13
+    TabOrder = 3
+    Text = 'ComboBox3'
+    OnChange = ComboBox3Change
+  end
+  object Button2: TButton
+    Left = 176
+    Top = 160
+    Width = 99
+    Height = 25
+    Caption = 'Close'
+    TabOrder = 4
+    OnClick = Button2Click
+  end
+  object Edit1: TEdit
+    Left = 8
+    Top = 120
+    Width = 121
+    Height = 21
+    TabOrder = 5
+    Text = 'Edit1'
+  end
+  object Edit2: TEdit
+    Left = 160
+    Top = 120
+    Width = 121
+    Height = 21
+    TabOrder = 6
+    Text = 'Edit2'
+  end
+  object StaticText1: TStaticText
+    Left = 8
+    Top = 88
+    Width = 273
+    Height = 25
+    AutoSize = False
+    Caption = 'Formula:'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Style = [fsBold]
+    ParentFont = False
+    TabOrder = 7
+  end
+end
